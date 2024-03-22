@@ -1,0 +1,29 @@
+name: Mysql cd
+
+on:
+#  push:
+#    branches:
+#      - develop
+  workflow_dispatch:
+    paths:
+      - 'test-mysql/**'
+
+jobs:
+  deploy:
+#    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: NCP login and docker image pull and run start
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.NCP_HOST }}
+          username: ${{ secrets.NCP_USERNAME }}
+          password: ${{ secrets.NCP_PASSWORD }}
+          port: ${{ secrets.NCP_PORT }}
+          script: |
+            cd /root/compose
+            sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+            sudo docker-compose -f docker-compose.yml down --rmi all
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/test-mysql
+            sudo docker-compose -f docker-compose.yml up -d
